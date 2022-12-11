@@ -13,7 +13,7 @@ const (
 	port     = 5432
 	user     = "user"
 	password = "password"
-	dbname   = "dbname"
+	dbname   = "db name"
 )
 
 func checkError(err error) { // прописываем ошибки
@@ -36,6 +36,72 @@ func openDb() *sql.DB { // открываем базу данных
 	return db
 }
 
+func show_table_cluch_rez() { // выводим запись по ключу
+	var gol, les_gol int
+	var date string
+	fmt.Print("Введите дату чемпионата:\n")
+	fmt.Fscan(os.Stdin, &date)
+	rows, err := openDb().Query(`SELECT * from "BdChemp"."результаты" where "дата_чемпионата"=$1`, date)
+	checkError(err)
+	defer rows.Close()
+	for rows.Next() {
+		err = rows.Scan(&gol, &les_gol, &date) // сканируем (количество) записи(строки)
+		checkError(err)
+
+		fmt.Println("Количество забитых голов:", gol, "Количество пропущенных голов: ", les_gol)
+	}
+	checkError(err)
+}
+
+func show_table_cluch_sost_team() { // выводим запись по ключу
+	var number int
+	var fiO, pozc string
+	fmt.Print("Введите ФИО футболиста:\n")
+	fmt.Fscan(os.Stdin, &fiO)
+	rows, err := openDb().Query(`SELECT * from "BdChemp"."состав_команд" where "фио_футболиста"=$1`, fiO)
+	checkError(err)
+	defer rows.Close()
+	for rows.Next() {
+		err = rows.Scan(&number, &fiO, &pozc)
+		checkError(err)
+
+		fmt.Println("номер футболиста: ", number, "позиция футболиста ", pozc)
+	}
+	checkError(err)
+}
+
+func show_table_cluch_team() { // выводим запись по ключу
+	var name_tm, fio_tren, country string
+	fmt.Print("Введите фио тренера:\n")
+	fmt.Fscan(os.Stdin, &fio_tren)
+	rows, err := openDb().Query(`SELECT * from "BdChemp"."список_команд" where "фио_тренера"=$1`, fio_tren)
+	checkError(err)
+	defer rows.Close()
+	for rows.Next() {
+		err = rows.Scan(&name_tm, &country, &fio_tren)
+		checkError(err)
+
+		fmt.Println("название команды: ", name_tm, "Страна: ", country)
+	}
+	checkError(err)
+}
+
+func show_table_cluch_chemp() { // выводим запись по ключу
+	var nazv_ch, year, country_ch string
+	fmt.Print("Введите название чемпионата:\n")
+	fmt.Fscan(os.Stdin, &nazv_ch)
+	rows, err := openDb().Query(`SELECT * from "BdChemp"."чемпионаты_мира" where "название_чемпионата"=$1`, nazv_ch)
+	checkError(err)
+	defer rows.Close()
+	for rows.Next() {
+		err = rows.Scan(&year, &country_ch, &nazv_ch)
+		checkError(err)
+
+		fmt.Println("год чемпионата: ", year, "страна чемпионата: ", country_ch)
+	}
+	checkError(err)
+}
+
 func show_table_rez() { // показываем таблицу результаты
 	rows, err := openDb().Query(`SELECT "забитые_голы", "пропущеные_голы", "дата_чемпионата" FROM "BdChemp"."результаты"`) // селект запрос
 	checkError(err)
@@ -48,7 +114,7 @@ func show_table_rez() { // показываем таблицу результа�
 		err = rows.Scan(&gol, &les_gol, &date)
 		checkError(err)
 
-		fmt.Println(gol, les_gol, date)
+		fmt.Println("Забитые голы: ", gol, "Пропущенные голы: ", les_gol, "Дата чемпионата: ", date)
 	}
 
 	checkError(err)
@@ -66,7 +132,7 @@ func show_table_sost_team() { // показываем таблицу соста�
 		err = rows.Scan(&fiO, &number, &pozc)
 		checkError(err)
 
-		fmt.Println(fiO, number, pozc)
+		fmt.Println("ФИО футболиста: ", fiO, "Номер футболиста: ", number, "Позиция: ", pozc)
 	}
 
 	checkError(err)
@@ -84,7 +150,7 @@ func show_table_team() { // показываем таблицу список к�
 		err = rows.Scan(&name_tm, &fio_tren, &country)
 		checkError(err)
 
-		fmt.Println(name_tm, fio_tren, country)
+		fmt.Println("Название команды: ", name_tm, "ФИО тренера: ", fio_tren, "Страна команды: ", country)
 	}
 
 	checkError(err)
@@ -101,7 +167,7 @@ func show_table_chemp() { // показываем таблицу чемпион�
 		err = rows.Scan(&nazv_ch, &year, &country_ch)
 		checkError(err)
 
-		fmt.Println(nazv_ch, year, country_ch)
+		fmt.Println("Название чемпионата: ", nazv_ch, "Год чемпионата: ", year, "Страна чемпионата: ", country_ch)
 	}
 
 	checkError(err)
@@ -355,6 +421,23 @@ func show_switch_case() { // функция выбора таблицы для �
 	}
 }
 
+func show_switch_cluch() {
+	var vibor string
+	fmt.Print("выберите дейсвтие: showCluchRez -  чтобы показать данные из таблицы результаты\n showCluchSostTeam - показать данные из таблицы состав команд\n showCluchTeam показать данные из таблицы список команд\n showCluchChemp - показать данные из таблицы чемпионаты\n")
+	fmt.Scanf("%s\n", &vibor)
+
+	switch vibor {
+	case "showCluchRez":
+		show_table_cluch_rez()
+	case "showCluchSostTeam":
+		show_table_cluch_sost_team()
+	case "showCluchTeam":
+		show_table_cluch_team()
+	case "showCluchChemp":
+		show_table_cluch_chemp()
+	}
+}
+
 func main() {
 	var v1 string
 	//close db
@@ -363,7 +446,7 @@ func main() {
 	err := openDb().Ping()
 	checkError(err)
 
-	fmt.Print("Что вы хотите сделать?\n Чтобы добавить значения в таблицу введите addTable\n Чтобы обновить запись введите updateTable\n Чтобы удалить запись из таблицы введите deleteFromTable\n Чтобы показать данные в таблице введите showTable\n")
+	fmt.Print("Что вы хотите сделать?\n Чтобы добавить значения в таблицу введите addTable\n Чтобы обновить запись введите updateTable\n Чтобы удалить запись из таблицы введите deleteFromTable\n Чтобы показать данные в таблице введите showTable\n Чтобы вывести запись по ключу введите showCluchTable\n")
 	fmt.Scanf("%s\n", &v1)
 
 	switch v1 {
@@ -375,5 +458,7 @@ func main() {
 		delete_switch_case()
 	case "showTable":
 		show_switch_case()
+	case "showCluchTable":
+		show_switch_cluch()
 	}
 }
