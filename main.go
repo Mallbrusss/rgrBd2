@@ -13,7 +13,7 @@ const (
 	port     = 5432
 	user     = "user"
 	password = "password"
-	dbname   = "db name"
+	dbname   = "dbName"
 )
 
 func checkError(err error) { // прописываем ошибки
@@ -41,7 +41,7 @@ func show_table_cluch_rez() { // выводим запись по ключу
 	var date string
 	fmt.Print("Введите дату чемпионата:\n")
 	fmt.Fscan(os.Stdin, &date)
-	rows, err := openDb().Query(`SELECT * from "BdChemp"."результаты" where "дата_чемпионата"=$1`, date)
+	rows, err := openDb().Query(`SELECT * from "BdChemp"."результаты" where "дата_чемпионата"=$1`, &date)
 	checkError(err)
 	defer rows.Close()
 	for rows.Next() {
@@ -58,7 +58,7 @@ func show_table_cluch_sost_team() { // выводим запись по ключ
 	var fiO, pozc string
 	fmt.Print("Введите ФИО футболиста:\n")
 	fmt.Fscan(os.Stdin, &fiO)
-	rows, err := openDb().Query(`SELECT * from "BdChemp"."состав_команд" where "фио_футболиста"=$1`, fiO)
+	rows, err := openDb().Query(`SELECT * from "BdChemp"."состав_команд" where "фио_футболиста"=$1`, &fiO)
 	checkError(err)
 	defer rows.Close()
 	for rows.Next() {
@@ -74,7 +74,7 @@ func show_table_cluch_team() { // выводим запись по ключу
 	var name_tm, fio_tren, country string
 	fmt.Print("Введите фио тренера:\n")
 	fmt.Fscan(os.Stdin, &fio_tren)
-	rows, err := openDb().Query(`SELECT * from "BdChemp"."список_команд" where "фио_тренера"=$1`, fio_tren)
+	rows, err := openDb().Query(`SELECT * from "BdChemp"."список_команд" where "фио_тренера"=$1`, &fio_tren)
 	checkError(err)
 	defer rows.Close()
 	for rows.Next() {
@@ -90,14 +90,16 @@ func show_table_cluch_chemp() { // выводим запись по ключу
 	var nazv_ch, year, country_ch string
 	fmt.Print("Введите название чемпионата:\n")
 	fmt.Fscan(os.Stdin, &nazv_ch)
-	rows, err := openDb().Query(`SELECT * from "BdChemp"."чемпионаты_мира" where "название_чемпионата"=$1`, nazv_ch)
+	fmt.Print("Введите год чемпионата:\n")
+	fmt.Fscan(os.Stdin, &year)
+	rows, err := openDb().Query(`SELECT * from "BdChemp"."чемпионаты_мира" where "название_чемпионата"=$1 and "год_чемпионата"=$2`, &nazv_ch, &year)
 	checkError(err)
 	defer rows.Close()
 	for rows.Next() {
-		err = rows.Scan(&year, &country_ch, &nazv_ch)
+		err = rows.Scan(&year, &nazv_ch, &country_ch)
 		checkError(err)
 
-		fmt.Println("год чемпионата: ", year, "страна чемпионата: ", country_ch)
+		fmt.Println("страна чемпионата: ", country_ch)
 	}
 	checkError(err)
 }
@@ -204,12 +206,14 @@ func delete_key_team() { // удаляем из таблицы список
 }
 
 func delete_key_chemp() { // удаляем из таблицы чемпионат
-	var check int
-	fmt.Print("какую запись удалить? номер объявления:\n")
+	var check, check2 string
+	fmt.Print("какую запись удалить? введите название чемпионата\n")
 	fmt.Fscan(os.Stdin, &check)
+	fmt.Print("введите год чемпионата\n")
+	fmt.Fscan(os.Stdin, &check2)
 
-	deleteS := `delete from "BdChemp"."чемпионаты_мира" where "название_чемпионата"=$1`
-	_, e := openDb().Exec(deleteS, &check)
+	deleteS := `delete from "BdChemp"."чемпионаты_мира" where "название_чемпионата"=$1 and "год_чемпионата"=$2`
+	_, e := openDb().Exec(deleteS, &check, &check2)
 	checkError(e)
 }
 
@@ -367,6 +371,8 @@ func add_switch_case() { // функция выбора таблицы для д
 		add_znach_to_team()
 	case "addChemp":
 		add_znach_to_chemp()
+	default:
+		fmt.Println("Неправильная команда")
 	}
 }
 
@@ -384,6 +390,8 @@ func update_switch_case() { // функция выбора таблицы для
 		update_table_team()
 	case "updateChemp":
 		update_table_chemp()
+	default:
+		fmt.Println("Неправильная команда")
 	}
 }
 
@@ -393,14 +401,16 @@ func delete_switch_case() { // функция выбора таблицы для
 	fmt.Scanf("%s\n", &vibor)
 
 	switch vibor {
-	case "delDom":
+	case "delRez":
 		delete_key_rez()
-	case "delKvartira":
+	case "delSostTeam":
 		delete_key_sost_team()
-	case "delCompany":
+	case "delTeam":
 		delete_key_team()
-	case "delOble":
+	case "delChemp":
 		delete_key_chemp()
+	default:
+		fmt.Println("Неправильная команда")
 	}
 }
 
@@ -418,6 +428,8 @@ func show_switch_case() { // функция выбора таблицы для �
 		show_table_team()
 	case "showChemp":
 		show_table_chemp()
+	default:
+		fmt.Println("Неправильная команда")
 	}
 }
 
@@ -435,6 +447,8 @@ func show_switch_cluch() {
 		show_table_cluch_team()
 	case "showCluchChemp":
 		show_table_cluch_chemp()
+	default:
+		fmt.Println("Неправильная команда")
 	}
 }
 
@@ -460,5 +474,7 @@ func main() {
 		show_switch_case()
 	case "showCluchTable":
 		show_switch_cluch()
+	default:
+		fmt.Println("Неправильная команда")
 	}
 }
